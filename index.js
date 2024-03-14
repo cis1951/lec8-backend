@@ -3,6 +3,7 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const WebSocket = require('ws');
 const mongodb = require('mongodb');
+const { object, string, number } = require('yup');
 const MongoClient = mongodb.MongoClient;
 
 const app = express();
@@ -13,6 +14,13 @@ const wss = new WebSocket.Server({ noServer: true });
 const mongoUrl = process.env.DB_URL;
 const dbName = 'chatdb';
 let db;
+
+const postSchema = object({
+  id: string().required().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+  author: string().required(),
+  content: string().required(),
+  date: number().required(),
+})
 
 MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true }, (err, client) => {
   if (err) {
@@ -54,7 +62,7 @@ app.get('/channels', async (req, res) => {
 app.post('/channels', async (req, res) => {
   try {
     const channelName = req.query.channel;
-    if (!channelName) {
+    if (!channelName || typeof channelName !== 'string') {
       return res.status(400).send('Channel name is required');
     }
 
@@ -84,7 +92,7 @@ app.post('/channels', async (req, res) => {
 app.delete('/channels', async (req, res) => {
   try {
     const channelName = req.query.channel;
-    if (!channelName) {
+    if (!channelName || typeof channelName !== 'string') {
       return res.status(400).send('Channel name is required');
     }
 
@@ -104,7 +112,7 @@ app.delete('/channels', async (req, res) => {
 app.get('/posts', async (req, res) => {
   try {
     const channelName = req.query.channel;
-    if (!channelName) {
+    if (!channelName || typeof channelName !== 'string') {
       return res.status(400).send('Channel name is required');
     }
 
@@ -114,7 +122,7 @@ app.get('/posts', async (req, res) => {
     }
 
     const limit = parseInt(req.query.limit, 10) || 10;
-    const posts = await db.collection(`${channelName}_posts`).find().sort({ date: -1 }).limit(limit).toArray();
+    const posts = await db.collection(`${channelName}_posts`).find().sort({ date: 1 }).limit(limit).toArray();
     return res.json(posts);
   } catch (error) {
     return res.status(500).send(error.message);
@@ -124,7 +132,7 @@ app.get('/posts', async (req, res) => {
 app.post('/posts', express.json(), async (req, res) => {
   try {
     const channelName = req.query.channel;
-    if (!channelName) {
+    if (!channelName || typeof channelName !== 'string') {
       return res.status(400).send('Channel name is required');
     }
 
@@ -133,9 +141,17 @@ app.post('/posts', express.json(), async (req, res) => {
       return res.status(404).send('Channel not found');
     }
 
-    const post = req.body;
-    if (!post) {
+    const rawPost = req.body;
+    if (!rawPost) {
       return res.status(400).send('Post is required');
+    }
+
+    let post;
+    try {
+      post = await postSchema.validate(rawPost);
+    } catch (e) {
+      console.error(e);
+      return res.status(400).send('Invalid post');
     }
 
     await db.collection(`${channelName}_posts`).insertOne(post);
