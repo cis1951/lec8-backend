@@ -32,6 +32,10 @@ MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true 
   });
 });
 
+app.get('/', (req, res) => {
+  res.send('Welcome to the iOstagram API!');
+});
+
 app.get('/channels', async (req, res) => {
   try {
     const channels = await db.collection('channels').find().toArray();
