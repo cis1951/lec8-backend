@@ -17,7 +17,7 @@ let db;
 
 const postSchema = object({
   id: string().required().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
-  author: string().required(),
+  author: string().required().default('Anonymous'),
   content: string().required(),
   createdAt: number().required(),
 })
