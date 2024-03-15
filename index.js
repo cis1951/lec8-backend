@@ -148,7 +148,7 @@ app.post('/posts', express.json(), async (req, res) => {
 
     let post;
     try {
-      post = await postSchema.validate(rawPost);
+      post = await postSchema.cast(rawPost);
     } catch (e) {
       console.error(e);
       return res.status(400).send('Invalid post');
