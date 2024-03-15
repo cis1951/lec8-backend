@@ -121,8 +121,8 @@ app.get('/posts', async (req, res) => {
       return res.status(404).send('Channel not found');
     }
 
-    const limit = parseInt(req.query.limit, 10) || 10;
-    const posts = await db.collection(`${channelName}_posts`).find().sort({ date: 1 }).limit(limit).toArray();
+    const limit = parseInt(req.query.limit, 10) || 10000;
+    const posts = await db.collection(`${channelName}_posts`).find().sort({ createdAt: 1 }).limit(limit).toArray();
     return res.json(posts);
   } catch (error) {
     return res.status(500).send(error.message);
