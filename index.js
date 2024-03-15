@@ -19,7 +19,7 @@ const postSchema = object({
   id: string().required().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
   author: string().required(),
   content: string().required(),
-  date: number().required(),
+  createdAt: number().required(),
 })
 
 MongoClient.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true }, (err, client) => {
